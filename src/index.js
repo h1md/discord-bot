@@ -91,4 +91,19 @@ client.on(Events.MessageCreate, async (message) => {
   }
 });
 
+// Serveur HTTP optionnel (keepalive) — requis par certains hébergeurs
+// (Alwaysdata, Render, Replit...) qui attendent une écoute sur un port.
+if (process.env.PORT) {
+  const http = require('http');
+  const host = process.env.HOST || '0.0.0.0';
+  http
+    .createServer((req, res) => {
+      res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end(`Bot en ligne — ${client.user ? client.user.tag : 'démarrage...'}`);
+    })
+    .listen(process.env.PORT, host, () => {
+      console.log(`🌐 Serveur keepalive en écoute sur ${host}:${process.env.PORT}`);
+    });
+}
+
 client.login(config.token);
