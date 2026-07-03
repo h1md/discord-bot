@@ -104,6 +104,8 @@ Le préfixe se change par serveur avec `/prefix-set` (ou la variable `DEFAULT_PR
 
 `+help` (ou `/help`) affiche **toutes les commandes** classées par catégorie. `+help modération` filtre par catégorie.
 
+> ⚠️ **Discord limite le nombre de commandes slash `/` à ~100 par serveur.** Le bot a 254 commandes : `npm run deploy` enregistre automatiquement les 100 prioritaires en `/`, et **toutes les 254 restent utilisables avec le préfixe `+`** (aucune limite). Tu peux ajuster le nombre avec `SLASH_LIMIT=100` dans `.env`.
+
 ## 📝 Notes
 
 - La configuration de chaque serveur est stockée dans `data/guilds.json` (créé automatiquement).
