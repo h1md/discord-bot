@@ -1,0 +1,31 @@
+{
+  "name": "discord-server-bot",
+  "version": "1.0.0",
+  "description": "Gros bot Discord de gestion de serveur (Anti-Raid, Modération, Logs, Config, etc.) avec 250+ commandes slash.",
+  "main": "src/index.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "deploy": "node src/deploy-commands.js",
+    "deploy:global": "node src/deploy-commands.js --global",
+    "clear": "node src/deploy-commands.js --clear",
+    "count": "node scripts/count-commands.js",
+    "test": "node scripts/count-commands.js --check"
+  },
+  "keywords": [
+    "discord",
+    "discord.js",
+    "bot",
+    "moderation",
+    "anti-raid"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "discord.js": "14.16.3",
+    "dotenv": "16.4.5"
+  }
+}
