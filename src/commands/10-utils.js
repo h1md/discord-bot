@@ -1,6 +1,25 @@
 const { cmd } = require('../lib/command');
 const store = require('../lib/store');
+const config = require('../config');
 const E = require('../lib/embeds');
+
+const CAT_ORDER = ['Anti-Raid', 'Owner Bot', 'Gestion Serveur', 'Configuration', 'Logs', 'Paramètres Mod', 'Modération', 'Admin', 'Info', 'Utilitaires'];
+const CAT_EMOJI = {
+  'Anti-Raid': '🛡️', 'Owner Bot': '👑', 'Gestion Serveur': '🏠', 'Configuration': '⚙️', 'Logs': '📋',
+  'Paramètres Mod': '🔧', 'Modération': '🔨', 'Admin': '📣', 'Info': 'ℹ️', 'Utilitaires': '🎮',
+};
+
+/** Découpe un texte en morceaux <= max caractères sur les sauts de ligne. */
+function chunk(text, max = 4000) {
+  const out = [];
+  let cur = '';
+  for (const line of text.split('\n')) {
+    if ((cur + line + '\n').length > max) { out.push(cur); cur = ''; }
+    cur += line + '\n';
+  }
+  if (cur) out.push(cur);
+  return out;
+}
 
 const CAT = 'Utilitaires';
 
@@ -26,14 +45,37 @@ module.exports = [
       await interaction.reply({ embeds: [E.info('🏆 Classement', lines || '*aucune donnée*')] });
     } }),
 
-  cmd({ name: 'help', description: 'Affiche l\'aide et les catégories de commandes', category: CAT,
+  cmd({ name: 'help', description: 'Affiche toutes les commandes du bot', category: CAT,
+    options: [{ type: 'string', name: 'categorie', description: 'Filtrer par catégorie' }],
     execute: async (interaction, client) => {
-      const counts = {};
-      for (const c of client.commands.values()) counts[c.category] = (counts[c.category] || 0) + 1;
-      const lines = Object.entries(counts).map(([cat, n]) => `**${cat}** — ${n} commandes`).join('\n');
-      const embed = E.info(`📚 Aide — ${client.commands.size} commandes`, lines)
-        .setFooter({ text: 'Tape / pour voir toutes les commandes disponibles.' });
-      await interaction.reply({ embeds: [embed], ephemeral: true });
+      const prefix = store.get(interaction.guildId, 'prefix', config.defaultPrefix) || config.defaultPrefix;
+      const filter = interaction.options.getString('categorie');
+
+      // Regroupe les commandes par catégorie
+      const byCat = {};
+      for (const c of client.commands.values()) {
+        (byCat[c.category] = byCat[c.category] || []).push(c.data.name);
+      }
+
+      const cats = CAT_ORDER.filter((cat) => byCat[cat] && (!filter || cat.toLowerCase().includes(filter.toLowerCase())));
+      const embeds = [];
+      for (const cat of cats) {
+        const names = byCat[cat].sort();
+        const body = names.map((n) => `\`${prefix}${n}\``).join(' · ');
+        for (const part of chunk(body)) {
+          embeds.push(E.info(`${CAT_EMOJI[cat] || ''} ${cat} — ${names.length}`, part));
+        }
+      }
+
+      if (!embeds.length) {
+        return interaction.reply({ embeds: [E.error('Aucune catégorie', 'Catégorie introuvable.')], ephemeral: true });
+      }
+
+      embeds[0].setDescription(`**${client.commands.size} commandes** · préfixe \`${prefix}\` ou \`/\`\n\n${embeds[0].data.description}`);
+      embeds[embeds.length - 1].setFooter({ text: `Ex: ${prefix}ban @membre raison  •  ou tape /` });
+
+      // Discord limite à 10 embeds par message
+      await interaction.reply({ embeds: embeds.slice(0, 10) });
     } }),
 
   cmd({ name: 'remind', description: 'Programme un rappel personnel', category: CAT,

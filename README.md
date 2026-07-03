@@ -93,6 +93,17 @@ npm run count     # affiche le décompte par catégorie
 npm test          # échoue si les compteurs ne correspondent pas
 ```
 
+## ⌨️ Deux façons d'utiliser les commandes
+
+Toutes les commandes fonctionnent **à la fois** :
+
+- **En slash** : `/ban @membre raison`
+- **Avec le préfixe texte** (par défaut `+`) : `+ban @membre raison`
+
+Le préfixe se change par serveur avec `/prefix-set` (ou la variable `DEFAULT_PREFIX` dans `.env`).
+
+`+help` (ou `/help`) affiche **toutes les commandes** classées par catégorie. `+help modération` filtre par catégorie.
+
 ## 📝 Notes
 
 - La configuration de chaque serveur est stockée dans `data/guilds.json` (créé automatiquement).

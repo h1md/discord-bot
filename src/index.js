@@ -1,6 +1,8 @@
 const { Client, GatewayIntentBits, Partials, Collection, Events, ActivityType } = require('discord.js');
 const config = require('./config');
 const { loadCommands } = require('./lib/loader');
+const { buildInteraction } = require('./lib/messageAdapter');
+const store = require('./lib/store');
 const E = require('./lib/embeds');
 
 if (!config.token) {
@@ -29,7 +31,7 @@ console.log(`📦 ${commands.length} commandes chargées.`);
 
 client.once(Events.ClientReady, (c) => {
   console.log(`✅ Connecté en tant que ${c.user.tag}`);
-  c.user.setActivity(`${commands.length} commandes | /help`, { type: ActivityType.Watching });
+  c.user.setActivity(`${commands.length} cmds | ${config.defaultPrefix}help`, { type: ActivityType.Watching });
 });
 
 client.on(Events.InteractionCreate, async (interaction) => {
@@ -58,6 +60,34 @@ client.on(Events.InteractionCreate, async (interaction) => {
     } else {
       await interaction.reply(payload).catch(() => {});
     }
+  }
+});
+
+// Commandes texte via préfixe (par défaut "+", modifiable avec /prefix-set)
+client.on(Events.MessageCreate, async (message) => {
+  if (message.author.bot || !message.guild) return;
+  const prefix = store.get(message.guildId, 'prefix', config.defaultPrefix) || config.defaultPrefix;
+  if (!message.content.startsWith(prefix)) return;
+
+  const args = message.content.slice(prefix.length).trim().split(/\s+/);
+  const name = (args.shift() || '').toLowerCase();
+  const command = client.commands.get(name);
+  if (!command) return;
+
+  if (command.ownerOnly && !config.ownerIds.includes(message.author.id)) {
+    return message.reply({ embeds: [E.error('Accès refusé', 'Commande réservée aux propriétaires du bot.')] }).catch(() => {});
+  }
+  if (command.permission && message.member && !message.member.permissions.has(command.permission)) {
+    return message.reply({ embeds: [E.error('Permission manquante', 'Tu n\'as pas la permission pour cette commande.')] }).catch(() => {});
+  }
+
+  try {
+    const fake = await buildInteraction(command, message, args, client);
+    if (!fake) return;
+    await command.execute(fake, client);
+  } catch (err) {
+    console.error(`Erreur sur ${prefix}${name}:`, err);
+    await message.reply({ embeds: [E.error('Erreur', 'Une erreur est survenue pendant l\'exécution de la commande.')] }).catch(() => {});
   }
 });
 

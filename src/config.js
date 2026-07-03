@@ -8,6 +8,8 @@ const config = {
     .split(',')
     .map((id) => id.trim())
     .filter(Boolean),
+  // Préfixe par défaut des commandes texte (modifiable par serveur via /prefix-set)
+  defaultPrefix: process.env.DEFAULT_PREFIX || '+',
   // Couleurs utilisees dans les embeds
   colors: {
     primary: 0x5865f2,
